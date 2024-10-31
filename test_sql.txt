@@ -1,0 +1,7 @@
+
+-- Select all users
+SELECT user_id, username
+FROM users
+WHERE age >= 18
+    AND status = 'active'
+ORDER BY username;
