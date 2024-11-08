@@ -1,231 +1,212 @@
-import sys
 import re
 import os
-import html
+import time
 
-# Definición de tokens por lenguaje
 class TokenTypes:
-    # Tokens comunes
+    # Categorías léxicas comunes entre los tres lenguajes
+    KEYWORD = 'KEYWORD'
     IDENTIFIER = 'IDENTIFIER'
-    NUMBER = 'NUMBER'
-    STRING = 'STRING'
-    WHITESPACE = 'WHITESPACE'
-    COMMENT = 'COMMENT'
     OPERATOR = 'OPERATOR'
+    LITERAL = 'LITERAL'  # números y strings
+    COMMENT = 'COMMENT'
     DELIMITER = 'DELIMITER'
-    ERROR = 'ERROR'
-    EOF = 'EOF'
-
-    # Palabras reservadas por lenguaje
-    PYTHON_KEYWORDS = {
-        'def', 'class', 'if', 'else', 'elif', 'while', 'for', 'in', 'return',
-        'True', 'False', 'None', 'and', 'or', 'not', 'import', 'from', 'as'
-    }
-
-    SQL_KEYWORDS = {
-        'SELECT', 'FROM', 'WHERE', 'INSERT', 'UPDATE', 'DELETE', 'CREATE',
-        'DROP', 'TABLE', 'INTO', 'VALUES', 'JOIN', 'GROUP', 'BY', 'HAVING'
-    }
-
-    JS_KEYWORDS = {
-        'function', 'var', 'let', 'const', 'if', 'else', 'while', 'for',
-        'return', 'true', 'false', 'null', 'undefined', 'class', 'new'
-    }
-
-class Token:
-    def __init__(self, type, value, line, column):
-        self.type = type
-        self.value = value
-        self.line = line
-        self.column = column
 
 class LexicalAnalyzer:
-    def __init__(self, language):
-        self.language = language.lower()
-        self.tokens = []
-        self.current_line = 1
-        self.current_column = 1
-        
-        # Patrones de tokens por lenguaje
+    def __init__(self):
+        # Expresiones regulares para las categorías léxicas
         self.patterns = {
             'python': {
-                'string': r'("[^"]*"|\'[^\']*\')',
-                'number': r'\d*\.?\d+',
+                'keyword': r'\b(def|class|if|else|while|for|return|import|from|as)\b',
                 'identifier': r'[a-zA-Z_]\w*',
-                'operator': r'[+\-*/=<>!]=?|[%&|^~]',
-                'delimiter': r'[\[\]{}(),;:]',
-                'comment': r'#.*$|"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'',
-                'whitespace': r'\s+'
+                'operator': r'[+\-*/=<>]|==|!=|<=|>=',
+                'literal': r'\d+(\.\d+)?|"[^"]*"|\'[^\']*\'',
+                'comment': r'#.*$',
+                'delimiter': r'[():,\[\]{}]'
             },
             'sql': {
-                'string': r'\'[^\']*\'',
-                'number': r'\d+\.?\d*',
+                'keyword': r'\b(SELECT|FROM|WHERE|INSERT|UPDATE|DELETE|CREATE|DROP)\b',
                 'identifier': r'[a-zA-Z_]\w*',
-                'operator': r'[+=<>!]=?|<>|[-*/]',
-                'delimiter': r'[(),;.]',
-                'comment': r'--.*$|/\*[\s\S]*?\*/',
-                'whitespace': r'\s+'
+                'operator': r'=|<>|<|>|<=|>=',
+                'literal': r'\d+|\'\w+\'',
+                'comment': r'--.*$',
+                'delimiter': r'[,;()]'
             },
             'javascript': {
-                'string': r'("[^"]*"|\'[^\']*\'|`[^`]*`)',
-                'number': r'\d*\.?\d+',
+                'keyword': r'\b(function|var|let|if|else|while|for|return)\b',
                 'identifier': r'[a-zA-Z_$]\w*',
-                'operator': r'[+\-*/=<>!]=?|[%&|^~]|\+\+|--',
-                'delimiter': r'[\[\]{}(),;:]',
-                'comment': r'//.*$|/\*[\s\S]*?\*/',
-                'whitespace': r'\s+'
+                'operator': r'[+\-*/=<>]|==|===|!=|!==|<=|>=',
+                'literal': r'\d+(\.\d+)?|"[^"]*"|\'[^\']*\'',
+                'comment': r'//.*$',
+                'delimiter': r'[();,{}]'
             }
         }
-
-    def tokenize(self, text):
-        self.tokens = []
-        position = 0
+    
+    def tokenize(self, text, language):
+        tokens = []
+        lines = text.split('\n')
         
-        while position < len(text):
-            match = None
-            token_type = None
-            
-            # Saltar espacios en blanco
-            whitespace_match = re.match(self.patterns[self.language]['whitespace'], text[position:])
-            if whitespace_match:
-                position += len(whitespace_match.group(0))
-                self.current_column += len(whitespace_match.group(0))
-                continue
-            
-            # Buscar coincidencias con los patrones
-            for pattern_name, pattern in self.patterns[self.language].items():
-                regex = re.compile(pattern)
-                match = regex.match(text[position:])
+        start_time = time.time()
+        
+        for line_num, line in enumerate(lines, 1):
+            position = 0
+            while position < len(line):
+                match = None
                 
-                if match:
-                    value = match.group(0)
-                    if pattern_name == 'identifier':
-                        # Verificar si es una palabra reservada
-                        upper_value = value.upper()
-                        if self.language == 'python' and value in TokenTypes.PYTHON_KEYWORDS:
-                            token_type = 'KEYWORD'
-                        elif self.language == 'sql' and upper_value in TokenTypes.SQL_KEYWORDS:
-                            token_type = 'KEYWORD'
-                        elif self.language == 'javascript' and value in TokenTypes.JS_KEYWORDS:
-                            token_type = 'KEYWORD'
-                        else:
-                            token_type = TokenTypes.IDENTIFIER
-                    else:
-                        token_type = pattern_name.upper()
-                    
-                    self.tokens.append(Token(token_type, value, self.current_line, self.current_column))
-                    position += len(value)
-                    
-                    if '\n' in value:
-                        newlines = value.count('\n')
-                        self.current_line += newlines
-                        self.current_column = len(value.split('\n')[-1]) + 1
-                    else:
-                        self.current_column += len(value)
-                    break
-            
-            if not match:
-                # Carácter no reconocido
-                self.tokens.append(Token(TokenTypes.ERROR, text[position], self.current_line, self.current_column))
-                position += 1
-                self.current_column += 1
+                # Ignorar espacios en blanco
+                if line[position].isspace():
+                    position += 1
+                    continue
+                
+                # Buscar coincidencias con los patrones
+                for token_type, pattern in self.patterns[language].items():
+                    regex = re.compile(pattern)
+                    match = regex.match(line[position:])
+                    if match:
+                        value = match.group(0)
+                        tokens.append((token_type.upper(), value, line_num))
+                        position += len(value)
+                        break
+                
+                if not match:
+                    position += 1
+        
+        end_time = time.time()
+        processing_time = end_time - start_time
+        
+        return tokens, processing_time
 
-        self.tokens.append(Token(TokenTypes.EOF, '', self.current_line, self.current_column))
-        return self.tokens
-
-    def generate_html(self, output_file):
-        html_content = """
+    def generate_html(self, filename, tokens, language, processing_time):
+        html = f"""
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Léxico - {filename}</title>
     <style>
-        body { font-family: monospace; background-color: #f5f5f5; }
-        pre { background-color: white; padding: 20px; border-radius: 5px; }
-        .keyword { color: #0000ff; font-weight: bold; }
-        .string { color: #008000; }
-        .number { color: #ff4500; }
-        .operator { color: #a52a2a; }
-        .delimiter { color: #666666; }
-        .identifier { color: #000000; }
-        .comment { color: #808080; font-style: italic; }
-        .error { color: #ff0000; text-decoration: underline wavy; }
+        body {{ 
+            font-family: 'Arial', sans-serif; 
+            margin: 20px;
+            background-color: #f5f5f5;
+        }}
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        .keyword {{ color: #0000ff; font-weight: bold; }}
+        .identifier {{ color: #000000; }}
+        .operator {{ color: #a52a2a; }}
+        .literal {{ color: #008000; }}
+        .comment {{ color: #808080; font-style: italic; }}
+        .delimiter {{ color: #666666; }}
+        .stats {{ 
+            margin-top: 20px; 
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }}
+        .code {{
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            overflow-x: auto;
+            margin: 20px 0;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }}
+        h2, h3 {{
+            color: #333;
+        }}
     </style>
 </head>
 <body>
-    <pre>"""
+    <div class="container">
+        <h2>Análisis Léxico del archivo: {filename}</h2>
+        <h3>Lenguaje: {language.upper()}</h3>
+        <div class="code">"""
 
-        for token in self.tokens:
-            if token.type == TokenTypes.EOF:
-                continue
-                
-            css_class = token.type.lower()
-            escaped_value = html.escape(token.value)
-            html_content += f'<span class="{css_class}">{escaped_value}</span>'
-
-        html_content += """
-    </pre>
+        current_line = 1
+        for token_type, value, line in tokens:
+            if line > current_line:
+                html += '<br>' * (line - current_line)
+                current_line = line
+            css_class = token_type.lower()
+            html += f'<span class="{css_class}">{value}</span> '
+        
+        token_count = len(tokens)
+        html += f"""
+        </div>
+        <div class="stats">
+            <h3>Estadísticas:</h3>
+            <p>Tokens encontrados: {token_count}</p>
+            <p>Tiempo de procesamiento: {processing_time:.4f} segundos</p>
+            <p>Complejidad del algoritmo: O(n), donde n es el número de caracteres</p>
+        </div>
+    </div>
 </body>
-</html>"""
+</html>
+"""
+        return html
 
+def process_file(input_file, input_dir='codigos', output_dir='resultados'):
+    # Determinar el lenguaje por la extensión del archivo
+    ext = input_file.split('.')[-1].lower()
+    language_map = {'py': 'python', 'sql': 'sql', 'js': 'javascript'}
+    language = language_map.get(ext)
+    
+    if not language:
+        print(f"Extensión no soportada: {ext}")
+        return
+    
+    try:
+        # Leer el archivo con codificación UTF-8
+        input_path = os.path.join(input_dir, input_file)
+        with open(input_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        analyzer = LexicalAnalyzer()
+        tokens, processing_time = analyzer.tokenize(content, language)
+        
+        os.makedirs(output_dir, exist_ok=True)
+        
+        output_file = os.path.join(output_dir, f"{os.path.splitext(input_file)[0]}_{language}_resultado.html")
+        html_content = analyzer.generate_html(input_file, tokens, language, processing_time)
+        
+        # Escribir el archivo HTML con codificación UTF-8
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(html_content)
-
-def process_file(input_file, language):
-    with open(input_file, 'r', encoding='utf-8') as f:
-        content = f.read()
-    
-    analyzer = LexicalAnalyzer(language)
-    tokens = analyzer.tokenize(content)
-    
-    output_file = f"{os.path.splitext(input_file)[0]}_highlighted.html"
-    analyzer.generate_html(output_file)
-    
-    return tokens
-
-# Archivos de prueba
-test_files = {
-    'python': """
-def calculate_sum(a, b):
-    # This is a comment
-    return a + b  # Return the sum
-
-result = calculate_sum(10, 20.5)
-print(f"The sum is: {result}")
-""",
-    'sql': """
--- Select all users
-SELECT user_id, username
-FROM users
-WHERE age >= 18
-    AND status = 'active'
-ORDER BY username;
-""",
-    'javascript': """
-function calculateProduct(a, b) {
-    // This is a comment
-    let result = a * b;
-    return result;
-}
-
-const numbers = [1, 2, 3];
-numbers.forEach(num => console.log(num));
-"""
-}
+        
+        print(f"Archivo procesado: {input_file}")
+        print(f"Resultado guardado en: {output_file}")
+        print(f"Tiempo de procesamiento: {processing_time:.4f} segundos")
+        print(f"Tokens encontrados: {len(tokens)}")
+        
+    except Exception as e:
+        print(f"Error procesando {input_file}: {str(e)}")
 
 def main():
-    # Crear archivos de prueba
-    for lang, content in test_files.items():
-        test_file = f"test_{lang}.txt"
-        with open(test_file, 'w', encoding='utf-8') as f:
-            f.write(content)
-        
-        print(f"\nProcessing {lang.upper()} file:")
-        tokens = process_file(test_file, lang)
-        
-        print(f"\nTokens encontrados en {test_file}:")
-        for token in tokens:
-            if token.type != TokenTypes.WHITESPACE and token.type != TokenTypes.EOF:
-                print(f"Línea {token.line}, Columna {token.column}: {token.type} = '{token.value}'")
+    # Verificar que existe el directorio codigos
+    if not os.path.exists('codigos'):
+        print("Error: No se encontró la carpeta 'codigos'")
+        return
+    
+    # Procesar todos los archivos en la carpeta codigos
+    files = [f for f in os.listdir('codigos') if f.endswith(('.py', '.sql', '.js'))]
+    
+    if not files:
+        print("No se encontraron archivos para procesar en la carpeta 'codigos'")
+        return
+    
+    print(f"Encontrados {len(files)} archivos para procesar")
+    for file in files:
+        print(f"\nProcesando {file}...")
+        process_file(file)
 
 if __name__ == "__main__":
     main()

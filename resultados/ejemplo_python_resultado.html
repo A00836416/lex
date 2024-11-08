@@ -1,0 +1,64 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Léxico - ejemplo.py</title>
+    <style>
+        body { 
+            font-family: 'Arial', sans-serif; 
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .keyword { color: #0000ff; font-weight: bold; }
+        .identifier { color: #000000; }
+        .operator { color: #a52a2a; }
+        .literal { color: #008000; }
+        .comment { color: #808080; font-style: italic; }
+        .delimiter { color: #666666; }
+        .stats { 
+            margin-top: 20px; 
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .code {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            overflow-x: auto;
+            margin: 20px 0;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+        h2, h3 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Análisis Léxico del archivo: ejemplo.py</h2>
+        <h3>Lenguaje: PYTHON</h3>
+        <div class="code"><br><span class="keyword">def</span> <span class="identifier">suma</span> <span class="delimiter">(</span> <span class="identifier">a</span> <span class="delimiter">,</span> <span class="identifier">b</span> <span class="delimiter">)</span> <span class="delimiter">:</span> <br><span class="identifier">resultado</span> <span class="operator">=</span> <span class="identifier">a</span> <span class="operator">+</span> <span class="identifier">b</span> <br><span class="keyword">return</span> <span class="identifier">resultado</span> <br><br><span class="identifier">x</span> <span class="operator">=</span> <span class="literal">10</span> <br><span class="identifier">y</span> <span class="operator">=</span> <span class="literal">20</span> <br><span class="identifier">print</span> <span class="delimiter">(</span> <span class="literal">"La suma es:"</span> <span class="delimiter">,</span> <span class="identifier">suma</span> <span class="delimiter">(</span> <span class="identifier">x</span> <span class="delimiter">,</span> <span class="identifier">y</span> <span class="delimiter">)</span> <span class="delimiter">)</span> 
+        </div>
+        <div class="stats">
+            <h3>Estadísticas:</h3>
+            <p>Tokens encontrados: 32</p>
+            <p>Tiempo de procesamiento: 0.0003 segundos</p>
+            <p>Complejidad del algoritmo: O(n), donde n es el número de caracteres</p>
+        </div>
+    </div>
+</body>
+</html>

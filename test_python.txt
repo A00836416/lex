@@ -1,7 +1,0 @@
-
-def calculate_sum(a, b):
-    # This is a comment
-    return a + b  # Return the sum
-
-result = calculate_sum(10, 20.5)
-print(f"The sum is: {result}")
