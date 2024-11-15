@@ -75,7 +75,7 @@ class LexicalAnalyzer:
         
         return tokens, processing_time
 
-    def generate_html(self, filename, tokens, language, processing_time):
+def generate_html(self, filename, tokens, language, processing_time):
         html = f"""
 <!DOCTYPE html>
 <html lang="es">
@@ -110,6 +110,13 @@ class LexicalAnalyzer:
             border-radius: 4px;
             border: 1px solid #dee2e6;
         }}
+        .colors {{ 
+            margin-top: 20px; 
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }}
         .code {{
             background-color: #f8f9fa;
             padding: 15px;
@@ -122,6 +129,26 @@ class LexicalAnalyzer:
         }}
         h2, h3 {{
             color: #333;
+        }}
+        /* Nuevos estilos para los cuadrados de color */
+        .color-item {{
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            gap: 10px;
+        }}
+        .color-square {{
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ddd;
+        }}
+        .color-info {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }}
+        .color-name {{
+            min-width: 100px;
         }}
     </style>
 </head>
@@ -147,6 +174,51 @@ class LexicalAnalyzer:
             <p>Tokens encontrados: {token_count}</p>
             <p>Tiempo de procesamiento: {processing_time:.4f} segundos</p>
             <p>Complejidad del algoritmo: O(n), donde n es el número de caracteres</p>
+        </div>
+        <div class="colors">
+            <h3>Colores:</h3>
+            <div class="color-item">
+                <div class="color-info">
+                    <span class="color-name">Keywords:</span>
+                    <div class="color-square" style="background-color: #0000ff;"></div>
+                    <span class="color-hex">#0000FF</span>
+                </div>
+            </div>
+            <div class="color-item">
+                <div class="color-info">
+                    <span class="color-name">Identifier:</span>
+                    <div class="color-square" style="background-color: #000000;"></div>
+                    <span class="color-hex">#000000</span>
+                </div>
+            </div>
+            <div class="color-item">
+                <div class="color-info">
+                    <span class="color-name">Operator:</span>
+                    <div class="color-square" style="background-color: #a52a2a;"></div>
+                    <span class="color-hex">#A52A2A</span>
+                </div>
+            </div>
+            <div class="color-item">
+                <div class="color-info">
+                    <span class="color-name">Literal:</span>
+                    <div class="color-square" style="background-color: #008000;"></div>
+                    <span class="color-hex">#008000</span>
+                </div>
+            </div>
+            <div class="color-item">
+                <div class="color-info">
+                    <span class="color-name">Comment:</span>
+                    <div class="color-square" style="background-color: #808080;"></div>
+                    <span class="color-hex">#808080</span>
+                </div>
+            </div>
+            <div class="color-item">
+                <div class="color-info">
+                    <span class="color-name">Delimiter:</span>
+                    <div class="color-square" style="background-color: #666666;"></div>
+                    <span class="color-hex">#666666</span>
+                </div>
+            </div>
         </div>
     </div>
 </body>
