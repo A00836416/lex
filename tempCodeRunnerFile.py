@@ -13,7 +13,7 @@ class TokenTypes:
     DELIMITER = 'DELIMITER'
 
 class LexicalAnalyzer:
-    def _init_(self):
+    def __init__(self):
         # Expresiones regulares para las categorías léxicas
         self.patterns = {
             'python': {
@@ -211,5 +211,5 @@ def main():
     print(f"\nTiempo total secuencial: {end_sequential - start_sequential:.4f} segundos")
     print(f"Tiempo total paralelo: {end_parallel - start_parallel:.4f} segundos")
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()
