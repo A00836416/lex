@@ -142,7 +142,7 @@ class LexicalAnalyzer:
         <div class="stats">
             <h3>Estadísticas:</h3>
             <p>Tokens encontrados: {len(tokens)}</p>
-            <p>Tiempo de procesamiento: {processing_time:.4f} segundos</p>
+            <p>Tiempo de procesamiento: {processing_time:.5f} segundos</p>
         </div>
     </div>
 </body>
